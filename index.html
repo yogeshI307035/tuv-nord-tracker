@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>TÜV NORD · Topic Tracker</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  :root {
+    --bg: #0b0f17;
+    --bg-2: #0f1522;
+    --panel: #151b2b;
+    --panel-2: #1c2338;
+    --panel-hover: #212a42;
+    --border: #273048;
+    --border-hi: #3a4668;
+    --text: #e8ecf4;
+    --text-dim: #a8b1c7;
+    --muted: #6b7693;
+    --accent: #6ea8fe;
+    --accent-2: #8b5cf6;
+
+    --vhigh: #f87171;
+    --high:  #fb923c;
+    --medium: #fbbf24;
+    --low: #4ade80;
+    --tbd: #94a3b8;
+
+    --col-progress: #60a5fa;
+    --col-waiting:  #a78bfa;
+    --col-done: #4ade80;
+    --col-other: #94a3b8;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+    background: var(--bg); color: var(--text);
+    font-size: 13px; line-height: 1.5;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ========== Top bar ========== */
+  .topbar {
+    flex-shrink: 0;
+    padding: 12px 20px;
+    display: flex; align-items: center; gap: 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--panel);
+  }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    box-shadow: 0 0 10px var(--accent);
+  }
+  .brand h1 { margin: 0; font-size: 16px; font-weight: 700; letter-spacing: -0.2px; }
+  .brand .sub { color: var(--muted); font-size: 11px; margin-top: 1px; }
+  .spacer { flex: 1; }
+  .refresh-btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: var(--panel-2); border: 1px solid var(--border);
+    color: var(--text); font-size: 12px; font-weight: 500;
+    padding: 7px 12px; border-radius: 8px; cursor: pointer;
+  }
+  .refresh-btn:hover { border-color: var(--accent); }
+  .refresh-btn:disabled { opacity: 0.6; cursor: wait; }
+  .refresh-btn svg { transition: transform 0.6s; }
+  .refresh-btn.spinning svg { animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .hub-link {
+    font-size: 12px; color: var(--text-dim); padding: 6px 10px;
+    border-radius: 8px; border: 1px solid var(--border);
+    text-decoration: none;
+  }
+  .hub-link:hover { border-color: var(--accent); color: var(--text); }
+
+  /* ========== Controls ========== */
+  .controls {
+    flex-shrink: 0;
+    padding: 10px 20px;
+    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-2);
+  }
+  .search-wrap { position: relative; flex: 1; min-width: 220px; max-width: 360px; }
+  .search-wrap svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--muted); }
+  .controls input[type=text] {
+    width: 100%; background: var(--panel); border: 1px solid var(--border);
+    color: var(--text); padding: 7px 10px 7px 32px; border-radius: 8px; font-size: 13px; outline: none;
+  }
+  .controls input[type=text]:focus { border-color: var(--accent); }
+  .controls select {
+    background: var(--panel); border: 1px solid var(--border); color: var(--text);
+    padding: 7px 10px; border-radius: 8px; font-size: 12px; cursor: pointer; outline: none;
+  }
+  .toggle {
+    display: flex; align-items: center; gap: 6px;
+    color: var(--text-dim); font-size: 12px;
+    padding: 6px 10px; border-radius: 8px;
+    border: 1px solid var(--border); background: var(--panel);
+    cursor: pointer; user-select: none;
+  }
+  .toggle input { accent-color: var(--accent); }
+  .toggle.active { border-color: var(--accent); color: var(--text); background: var(--panel-2); }
+  .clear {
+    background: transparent; border: 1px solid var(--border); color: var(--text-dim);
+    padding: 6px 10px; border-radius: 8px; cursor: pointer; font-size: 12px;
+  }
+  .clear:hover { border-color: var(--border-hi); color: var(--text); }
+  .meta {
+    margin-left: auto; color: var(--muted); font-size: 11px;
+    font-family: ui-monospace, monospace;
+  }
+
+  /* ========== Board ========== */
+  main { flex: 1; min-height: 0; overflow: hidden; display: flex; }
+  .board {
+    flex: 1; min-height: 0;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(300px, 1fr);
+    gap: 14px;
+    padding: 14px 20px;
+    overflow-x: auto; overflow-y: hidden;
+  }
+  .column {
+    display: flex; flex-direction: column; min-height: 0;
+    background: var(--bg-2); border: 1px solid var(--border);
+    border-radius: 12px; overflow: hidden;
+  }
+  .column-head {
+    flex-shrink: 0; padding: 12px 14px;
+    display: flex; align-items: center; gap: 10px;
+    border-bottom: 1px solid var(--border);
+    background: var(--panel);
+  }
+  .column-head .swatch { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .column-head .name { font-size: 12px; font-weight: 600; letter-spacing: 0.3px; text-transform: uppercase; }
+  .column-head .count {
+    font-size: 11px; font-weight: 600;
+    background: var(--panel-2); color: var(--text-dim);
+    padding: 1px 8px; border-radius: 10px; margin-left: auto;
+  }
+  .cards {
+    flex: 1; min-height: 0;
+    overflow-y: scroll; overflow-x: hidden;
+    padding: 10px;
+    display: flex; flex-direction: column; gap: 8px;
+    scrollbar-gutter: stable;
+  }
+  .cards::-webkit-scrollbar { width: 10px; }
+  .cards::-webkit-scrollbar-track { background: transparent; }
+  .cards::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 5px; border: 2px solid var(--bg-2); background-clip: padding-box; }
+  .cards::-webkit-scrollbar-thumb:hover { background: var(--accent); background-clip: padding-box; border: 2px solid var(--bg-2); }
+
+  /* ========== Card ========== */
+  .card {
+    position: relative;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px 10px 14px;
+    cursor: pointer;
+    transition: transform 0.08s, border-color 0.12s, background 0.12s;
+  }
+  .card:hover { background: var(--panel-hover); border-color: var(--border-hi); }
+  .card.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .card .stripe {
+    position: absolute; left: 0; top: 10px; bottom: 10px; width: 3px; border-radius: 2px;
+    background: var(--muted);
+  }
+  .card.crit-very-high .stripe { background: var(--vhigh); }
+  .card.crit-high .stripe { background: var(--high); }
+  .card.crit-medium .stripe { background: var(--medium); }
+  .card.crit-low .stripe { background: var(--low); }
+  .card.crit-tbd .stripe { background: var(--tbd); }
+
+  .card .owner {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.4px;
+    color: var(--muted); font-weight: 600;
+  }
+  .card .title {
+    font-size: 13px; line-height: 1.4; margin-top: 3px;
+    color: var(--text); font-weight: 500;
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+    overflow: hidden; word-break: break-word;
+  }
+  .card .next-action {
+    margin-top: 6px; font-size: 11.5px; color: var(--text-dim);
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .card .chips { display: flex; gap: 5px; margin-top: 8px; flex-wrap: wrap; }
+  .chip {
+    font-size: 10px; padding: 1.5px 6px; border-radius: 10px; font-weight: 600;
+    background: var(--panel-2); color: var(--text-dim); border: 1px solid var(--border);
+    line-height: 1.5;
+  }
+  .chip.crit-very-high { background: rgba(248,113,113,0.12); color: var(--vhigh); border-color: rgba(248,113,113,0.3); }
+  .chip.crit-high { background: rgba(251,146,60,0.12); color: var(--high); border-color: rgba(251,146,60,0.3); }
+  .chip.crit-medium { background: rgba(251,191,36,0.12); color: var(--medium); border-color: rgba(251,191,36,0.3); }
+  .chip.crit-low { background: rgba(74,222,128,0.12); color: var(--low); border-color: rgba(74,222,128,0.3); }
+  .chip.crit-tbd { background: rgba(148,163,184,0.12); color: var(--tbd); border-color: rgba(148,163,184,0.3); }
+  .chip.has-note { background: rgba(74,222,128,0.1); color: var(--low); border-color: rgba(74,222,128,0.3); }
+
+  .empty-col { text-align: center; color: var(--muted); font-size: 11px; padding: 20px 8px; opacity: 0.6; }
+  .no-results { grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--muted); }
+  .no-results h3 { color: var(--text); margin: 0 0 4px; font-weight: 600; }
+
+  /* ========== Side sheet ========== */
+  .detail {
+    width: 0; overflow: hidden;
+    background: var(--panel); border-left: 1px solid var(--border);
+    transition: width 0.2s ease; flex-shrink: 0;
+  }
+  .detail.open { width: min(520px, 46vw); }
+  .detail-inner { width: min(520px, 46vw); height: 100%; overflow-y: auto; padding: 20px 22px; }
+  .detail-head { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
+  .detail-head h2 { margin: 0; font-size: 16px; font-weight: 600; line-height: 1.4; flex: 1; }
+  .detail-head .close {
+    background: transparent; border: 1px solid var(--border); color: var(--text-dim);
+    width: 28px; height: 28px; border-radius: 7px; cursor: pointer; font-size: 16px; line-height: 1;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .detail-sub { color: var(--muted); font-size: 12px; margin-bottom: 14px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+  .kv-grid {
+    display: grid; grid-template-columns: 100px 1fr; gap: 8px 12px;
+    font-size: 12.5px; padding: 12px 0;
+    border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+  }
+  .kv-grid .k { color: var(--muted); }
+  .kv-grid .v { color: var(--text-dim); word-break: break-word; white-space: pre-wrap; }
+
+  .longtext { margin-top: 14px; }
+  .longtext .block { background: var(--bg-2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; }
+  .longtext .block h4 { margin: 0 0 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); font-weight: 600; }
+  .longtext .block p { margin: 0; font-size: 12.5px; color: var(--text-dim); white-space: pre-wrap; word-break: break-word; }
+
+  .notes-section { margin-top: 18px; padding-top: 14px; border-top: 2px dashed var(--accent); }
+  .notes-section .notes-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .notes-section .notes-head svg { color: var(--accent); }
+  .notes-section .notes-head label { font-weight: 600; font-size: 13px; }
+  .notes-section .notes-head .saved { font-size: 10px; color: var(--muted); margin-left: auto; }
+  .notes-section textarea {
+    width: 100%; min-height: 180px; max-height: 50vh;
+    background: var(--bg-2); border: 1px solid var(--border); color: var(--text);
+    padding: 10px 12px; border-radius: 8px; font-family: inherit;
+    font-size: 13px; resize: vertical; outline: none; line-height: 1.5;
+  }
+
+  .nav-arrows { display: flex; gap: 6px; align-items: center; margin-top: 12px; }
+  .nav-arrows button {
+    background: var(--panel-2); border: 1px solid var(--border); color: var(--text-dim);
+    padding: 5px 10px; border-radius: 7px; cursor: pointer; font-size: 11px;
+  }
+  .nav-arrows button:disabled { opacity: 0.4; cursor: not-allowed; }
+  .nav-arrows .pos { font-size: 10px; color: var(--muted); margin-left: auto; font-family: ui-monospace, monospace; }
+
+  /* ========== Toast ========== */
+  .toast {
+    position: fixed; top: 14px; right: 20px; z-index: 100;
+    background: var(--panel-2); border: 1px solid var(--border-hi);
+    border-radius: 10px; padding: 12px 16px; min-width: 240px; max-width: 420px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    display: flex; align-items: flex-start; gap: 10px;
+    opacity: 0; transform: translateY(-10px); pointer-events: none;
+    transition: all 0.2s;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+  .toast.ok { border-left: 3px solid var(--low); }
+  .toast.err { border-left: 3px solid var(--vhigh); }
+  .toast.info { border-left: 3px solid var(--accent); }
+  .toast .title { font-weight: 600; font-size: 13px; margin-bottom: 2px; }
+  .toast .body { font-size: 12px; color: var(--text-dim); line-height: 1.4; }
+  .toast .x { background: transparent; border: none; color: var(--muted); cursor: pointer; font-size: 14px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <span class="dot"></span>
+    <div>
+      <h1>TÜV NORD · Topic Tracker</h1>
+      <div class="sub" id="sub">loading…</div>
+    </div>
+  </div>
+  <div class="spacer"></div>
+  <a class="hub-link" href="https://yogeshi307035.github.io/pm-dashboard-v2/" title="Back to PM Dashboard">← PM Dashboard</a>
+  <button class="refresh-btn" id="refresh-btn" title="Refresh from SharePoint">
+    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
+    <span id="refresh-label">Reload</span>
+  </button>
+</div>
+
+<div class="controls">
+  <div class="search-wrap">
+    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+    <input type="text" id="search" placeholder="Search topic, owner, next action…" autocomplete="off">
+  </div>
+  <select id="criticality">
+    <option value="">All criticality</option>
+    <option value="Very High">Very High</option>
+    <option value="High">High</option>
+    <option value="Medium">Medium</option>
+    <option value="Low">Low</option>
+    <option value="TBD">TBD</option>
+  </select>
+  <select id="owner"><option value="">All owners</option></select>
+  <label class="toggle" id="toggle-notes"><input type="checkbox" id="only-notes"> My notes only</label>
+  <button class="clear" id="clear">Reset</button>
+  <span class="meta" id="meta"></span>
+</div>
+
+<main>
+  <div class="board" id="board"></div>
+  <aside class="detail" id="detail"><div class="detail-inner" id="detail-inner"></div></aside>
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const NOTES_KEY = 'tuv-nord-tracker-notes-v1';
+
+// Status columns. Known statuses from the sheet: 'In Progress', 'Waiting for Feedback'.
+// Add common future statuses so they render correctly when they appear.
+const COLUMNS = [
+  { id: 'InProgress', label: 'In Progress',           color: 'var(--col-progress)', match: ['In Progress'] },
+  { id: 'Waiting',    label: 'Waiting for Feedback',  color: 'var(--col-waiting)',  match: ['Waiting for Feedback', 'Waiting'] },
+  { id: 'Blocked',    label: 'Blocked',               color: 'var(--vhigh)',        match: ['Blocked'] },
+  { id: 'Done',       label: 'Completed',             color: 'var(--col-done)',     match: ['Completed', 'Done', 'Resolved'], hideByDefault: true },
+];
+
+const CRIT_ORDER = { 'very high': 0, 'high': 1, 'medium': 2, 'low': 3, 'tbd': 4, '': 5 };
+
+let DATA = { rows: [], generated_at: '' };
+let CURRENT_ID = null;
+let FILTERED = [];
+let STATE = { search: '', criticality: '', owner: '', onlyNotes: false, showDone: false };
+
+/* ---------- Notes ---------- */
+function loadNotes() { try { return JSON.parse(localStorage.getItem(NOTES_KEY) || '{}'); } catch { return {}; } }
+function saveNotes(n) { localStorage.setItem(NOTES_KEY, JSON.stringify(n)); }
+function hasNote(id) { const n = loadNotes()[id]; return !!(n && n.text && n.text.trim()); }
+
+/* ---------- Helpers ---------- */
+function esc(s) { return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function linkify(s) { return esc(s).replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>'); }
+function critKey(c) { return (c || '').trim().toLowerCase(); }
+function critClass(c) {
+  const k = critKey(c);
+  if (k === 'very high') return 'crit-very-high';
+  if (['high','medium','low','tbd'].includes(k)) return 'crit-' + k;
+  return '';
+}
+
+/* ---------- Filtering ---------- */
+function applyFilters() {
+  const q = STATE.search.trim().toLowerCase();
+  return DATA.rows.filter(r => {
+    if (STATE.criticality && (r.criticality || '').trim() !== STATE.criticality) return false;
+    if (STATE.owner && r.owner !== STATE.owner) return false;
+    if (STATE.onlyNotes && !hasNote(r.id)) return false;
+    if (q) {
+      const hay = [r.topic, r.owner, r.next_action, r.criticality, r.status].join(' ').toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+}
+
+/* ---------- Render ---------- */
+function render() {
+  const rows = applyFilters();
+  const notes = loadNotes();
+  const board = document.getElementById('board');
+
+  const buckets = new Map(COLUMNS.map(c => [c.id, []]));
+  const unknown = [];
+  rows.forEach(r => {
+    const s = (r.status || '').trim();
+    const col = COLUMNS.find(c => c.match.includes(s));
+    if (col) buckets.get(col.id).push(r);
+    else unknown.push(r);
+  });
+
+  // Sort inside each column: criticality then topic
+  const sorter = (a, b) => {
+    const ca = CRIT_ORDER[critKey(a.criticality)] ?? 5;
+    const cb = CRIT_ORDER[critKey(b.criticality)] ?? 5;
+    if (ca !== cb) return ca - cb;
+    return (a.topic || '').localeCompare(b.topic || '');
+  };
+  buckets.forEach(arr => arr.sort(sorter));
+  if (unknown.length) {
+    // Put unknowns into "Blocked" column visually? No — into a separate Other column.
+    buckets.set('__other', unknown.sort(sorter));
+  }
+
+  // Flat for keyboard nav
+  FILTERED = [];
+  COLUMNS.forEach(c => FILTERED.push(...(buckets.get(c.id) || [])));
+  if (buckets.has('__other')) FILTERED.push(...buckets.get('__other'));
+
+  const visibleCols = COLUMNS.filter(c => !(c.hideByDefault));
+  const otherItems = buckets.get('__other') || [];
+
+  if (rows.length === 0) {
+    board.innerHTML = `<div class="no-results"><h3>No matches</h3><div>Try clearing filters.</div></div>`;
+    updateMeta(rows);
+    return;
+  }
+
+  let html = visibleCols.map(c => {
+    const items = buckets.get(c.id) || [];
+    return `
+      <div class="column">
+        <div class="column-head">
+          <span class="swatch" style="background:${c.color}"></span>
+          <span class="name">${c.label}</span>
+          <span class="count">${items.length}</span>
+        </div>
+        <div class="cards">
+          ${items.length ? items.map(r => cardHtml(r, notes)).join('') : `<div class="empty-col">Nothing here.</div>`}
+        </div>
+      </div>`;
+  }).join('');
+
+  if (otherItems.length) {
+    html += `
+      <div class="column">
+        <div class="column-head">
+          <span class="swatch" style="background:var(--col-other)"></span>
+          <span class="name">Other</span>
+          <span class="count">${otherItems.length}</span>
+        </div>
+        <div class="cards">${otherItems.map(r => cardHtml(r, notes)).join('')}</div>
+      </div>`;
+  }
+
+  board.innerHTML = html;
+  board.querySelectorAll('.card').forEach(el => {
+    el.addEventListener('click', () => openDetail(el.dataset.id));
+    if (el.dataset.id === CURRENT_ID) el.classList.add('active');
+  });
+  updateMeta(rows);
+}
+
+function cardHtml(r, notes) {
+  const crit = (r.criticality || '').trim();
+  const noted = notes[r.id] && notes[r.id].text && notes[r.id].text.trim();
+  return `
+    <div class="card ${critClass(crit)}" data-id="${esc(r.id)}">
+      <div class="stripe"></div>
+      <div class="owner">${esc(r.owner || '—')}</div>
+      <div class="title">${esc(r.topic)}</div>
+      ${r.next_action ? `<div class="next-action">→ ${esc(r.next_action)}</div>` : ''}
+      <div class="chips">
+        ${crit ? `<span class="chip ${critClass(crit)}">${esc(crit)}</span>` : ''}
+        ${noted ? `<span class="chip has-note">✎ noted</span>` : ''}
+      </div>
+    </div>`;
+}
+
+function updateMeta(rows) {
+  document.getElementById('meta').textContent = `${rows.length} shown · of ${DATA.rows.length} total`;
+}
+
+/* ---------- Side sheet ---------- */
+function openDetail(id) {
+  const r = DATA.rows.find(x => x.id === id);
+  if (!r) return;
+  CURRENT_ID = id;
+  const panel = document.getElementById('detail');
+  const inner = document.getElementById('detail-inner');
+  panel.classList.add('open');
+
+  const notes = loadNotes();
+  const note = notes[id] || { text: '', updated: '' };
+  const idx = FILTERED.findIndex(x => x.id === id);
+
+  inner.innerHTML = `
+    <div class="detail-head">
+      <h2>${esc(r.topic)}</h2>
+      <button class="close" onclick="closeDetail()" title="Close (Esc)">×</button>
+    </div>
+    <div class="detail-sub">
+      ${r.criticality ? `<span class="chip ${critClass(r.criticality)}">${esc(r.criticality)}</span>` : ''}
+      <span class="chip">${esc(r.status || '—')}</span>
+      <span style="color:var(--muted);">${esc(r.owner)}</span>
+    </div>
+    <div class="kv-grid">
+      <div class="k">Owner</div><div class="v">${esc(r.owner) || '—'}</div>
+      <div class="k">Criticality</div><div class="v">${esc(r.criticality) || '—'}</div>
+      <div class="k">Status</div><div class="v">${esc(r.status) || '—'}</div>
+    </div>
+    <div class="longtext">
+      ${r.next_action ? `<div class="block"><h4>Next action &amp; due date</h4><p>${linkify(r.next_action)}</p></div>` : ''}
+    </div>
+    <div class="notes-section">
+      <div class="notes-head">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        <label for="note-ta">My notes &amp; updates</label>
+        <span class="saved" id="saved-indicator">${note.updated ? 'Saved ' + new Date(note.updated).toLocaleString() : 'Not saved yet'}</span>
+      </div>
+      <textarea id="note-ta" placeholder="Add follow-ups, decisions, who to chase…">${esc(note.text)}</textarea>
+    </div>
+    <div class="nav-arrows">
+      <button id="prev-btn" ${idx <= 0 ? 'disabled' : ''}>← Prev</button>
+      <button id="next-btn" ${idx >= FILTERED.length - 1 ? 'disabled' : ''}>Next →</button>
+      <span class="pos">${idx + 1} / ${FILTERED.length}</span>
+    </div>`;
+
+  const ta = document.getElementById('note-ta');
+  let timer;
+  ta.addEventListener('input', () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      const n = loadNotes();
+      n[id] = { text: ta.value, updated: new Date().toISOString() };
+      saveNotes(n);
+      document.getElementById('saved-indicator').textContent = 'Saved ' + new Date().toLocaleString();
+      render();
+      document.querySelectorAll('.card').forEach(el => el.classList.toggle('active', el.dataset.id === id));
+    }, 300);
+  });
+
+  document.getElementById('prev-btn').onclick = () => navigate(-1);
+  document.getElementById('next-btn').onclick = () => navigate(1);
+
+  document.querySelectorAll('.card').forEach(el => el.classList.toggle('active', el.dataset.id === id));
+  const activeEl = document.querySelector(`.card[data-id="${id}"]`);
+  if (activeEl) activeEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+function closeDetail() {
+  CURRENT_ID = null;
+  document.getElementById('detail').classList.remove('open');
+  document.querySelectorAll('.card').forEach(el => el.classList.remove('active'));
+}
+window.closeDetail = closeDetail;
+function navigate(d) {
+  if (!CURRENT_ID) return;
+  const idx = FILTERED.findIndex(r => r.id === CURRENT_ID);
+  const next = FILTERED[idx + d];
+  if (next) openDetail(next.id);
+}
+
+/* ---------- Dropdowns ---------- */
+function populateSelect(id, values, placeholder) {
+  const el = document.getElementById(id);
+  const current = el.value;
+  el.innerHTML = `<option value="">${placeholder}</option>` +
+    [...new Set(values.filter(v => v && v.trim()))].sort()
+      .map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
+  el.value = current;
+}
+
+/* ---------- Toast ---------- */
+function toast(kind, title, body, ms = 3500) {
+  const t = document.getElementById('toast');
+  t.className = 'toast ' + kind;
+  t.innerHTML = `<div style="flex:1;"><div class="title">${esc(title)}</div>${body ? `<div class="body">${esc(body)}</div>` : ''}</div><button class="x" onclick="document.getElementById('toast').classList.remove('show')">×</button>`;
+  requestAnimationFrame(() => t.classList.add('show'));
+  if (ms > 0) { clearTimeout(window.__toastTimer); window.__toastTimer = setTimeout(() => t.classList.remove('show'), ms); }
+}
+
+/* ---------- Refresh button ---------- */
+const IS_LOCAL = /^(localhost|127\.0\.0\.1|0\.0\.0\.0)$/.test(location.hostname);
+function setupRefreshButton() {
+  const btn = document.getElementById('refresh-btn');
+  const label = document.getElementById('refresh-label');
+  label.textContent = IS_LOCAL ? 'Reload' : 'Reload';
+  btn.title = 'Pull latest data.json';
+  btn.addEventListener('click', async () => {
+    btn.classList.add('spinning'); btn.disabled = true;
+    try {
+      await load();
+      toast('ok', 'Data reloaded', `${DATA.row_count} rows · synced ${new Date(DATA.generated_at).toLocaleString()}`);
+    } catch (e) {
+      toast('err', 'Reload failed', String(e));
+    } finally {
+      btn.classList.remove('spinning'); btn.disabled = false;
+    }
+  });
+}
+
+/* ---------- Load ---------- */
+async function load() {
+  const resp = await fetch('data/data.json?_=' + Date.now(), { cache: 'no-store' });
+  DATA = await resp.json();
+  const gen = new Date(DATA.generated_at);
+  document.getElementById('sub').textContent = `${DATA.row_count} topics · last synced ${gen.toLocaleString()}`;
+  populateSelect('owner', DATA.rows.map(r => r.owner), 'All owners');
+  render();
+}
+
+/* ---------- Events ---------- */
+document.getElementById('search').addEventListener('input', e => { STATE.search = e.target.value; render(); });
+document.getElementById('criticality').addEventListener('change', e => { STATE.criticality = e.target.value; render(); });
+document.getElementById('owner').addEventListener('change', e => { STATE.owner = e.target.value; render(); });
+document.getElementById('only-notes').addEventListener('change', e => {
+  STATE.onlyNotes = e.target.checked;
+  document.getElementById('toggle-notes').classList.toggle('active', e.target.checked);
+  render();
+});
+document.getElementById('clear').addEventListener('click', () => {
+  STATE = { search: '', criticality: '', owner: '', onlyNotes: false, showDone: false };
+  document.getElementById('search').value = '';
+  document.getElementById('criticality').value = '';
+  document.getElementById('owner').value = '';
+  document.getElementById('only-notes').checked = false;
+  document.getElementById('toggle-notes').classList.remove('active');
+  render();
+});
+
+/* ---------- Keyboard ---------- */
+window.addEventListener('keydown', e => {
+  const inField = ['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName);
+  if (e.key === '/' && !inField) { e.preventDefault(); const s = document.getElementById('search'); s.focus(); s.select(); }
+  if (e.key === 'Escape') {
+    if (inField && e.target.id === 'search') { e.target.value = ''; STATE.search = ''; render(); e.target.blur(); return; }
+    closeDetail();
+  }
+  if (!inField && CURRENT_ID) {
+    if (e.key === 'ArrowDown' || e.key === 'j') { e.preventDefault(); navigate(1); }
+    if (e.key === 'ArrowUp'   || e.key === 'k') { e.preventDefault(); navigate(-1); }
+  }
+});
+
+setupRefreshButton();
+load();
+</script>
+</body>
+</html>

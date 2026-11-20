@@ -1,0 +1,142 @@
+{
+  "generated_at": "2026-11-20T10:42:37+00:00",
+  "row_count": 15,
+  "customer": "TÜV NORD",
+  "rows": [
+    {
+      "topic": "Sales Cloud V2: Code List Restriction leads to error message in Opportunity View (1464153/2026)",
+      "criticality": "TBD",
+      "criticality_bucket": "TBD",
+      "owner": "Yogesh",
+      "next_action": "Review Incident and investigate",
+      "status": "In Progress",
+      "id": "9bc8a295a34d"
+    },
+    {
+      "topic": "SAP Sales Cloud V2: Initial Loads for Registered Services (1352523/2026)",
+      "criticality": "TBD",
+      "criticality_bucket": "TBD",
+      "owner": "Yogesh",
+      "next_action": "Review Incident and investigate status after 19th of November (These software corrections should be deployed to the production cluster (i.e., customer tenants) with next deployment, scheduled for November 19th. )",
+      "status": "In Progress",
+      "id": "16c0bc647661"
+    },
+    {
+      "topic": "Transport Management: Rework required across the 3-tier landscape is causing friction and delays",
+      "criticality": "Very High",
+      "criticality_bucket": "High",
+      "owner": "Yogesh / Moritz",
+      "next_action": "Discuss details in initial call with customer and jointly investigate / Eventually involve SAP Consulting for support",
+      "status": "In Progress",
+      "id": "7b6631594b0f"
+    },
+    {
+      "topic": "Quotes & Opportunities: No configurability and customzability at document type level – particularly critical since the Academy Business serves as the baseline, while other business units require their own customizations",
+      "criticality": "Very High",
+      "criticality_bucket": "High",
+      "owner": "Yogesh / Moritz",
+      "next_action": "Discuss details in initial call with customer and jointly investigate / Eventually involve SAP Consulting for support",
+      "status": "In Progress",
+      "id": "4f9e4b98ff71"
+    },
+    {
+      "topic": "Data Import / Export is buggy - it is currently not possible to transport the data exported from DEV without manual adjustment",
+      "criticality": "Very High",
+      "criticality_bucket": "High",
+      "owner": "Yogesh / Moritz",
+      "next_action": "Discuss details in initial call with customer and jointly investigate / Eventually involve SAP Consulting for support",
+      "status": "In Progress",
+      "id": "7e7304ca0371"
+    },
+    {
+      "topic": "Number Ranges for Debtors - currently only one number range possible - TÜV NORD needs more than one",
+      "criticality": "High",
+      "criticality_bucket": "High",
+      "owner": "Yogesh",
+      "next_action": "Review with PM and investigate; current workaround is to have contact Ids attached to contact information in v2; investigate roadmap item and options",
+      "status": "In Progress",
+      "id": "c903f14ed4f7"
+    },
+    {
+      "topic": "Sales Org and Sales Territory Connections",
+      "criticality": "High",
+      "criticality_bucket": "High",
+      "owner": "Katharina / Birte",
+      "next_action": "Check if deployed solution is valid for TÜV NORD / if workaround created - how do we remove it?",
+      "status": "Waiting for Feedback",
+      "id": "67667745fbdd"
+    },
+    {
+      "topic": "Autoflow very limited only for tasks and 6 months in the future only",
+      "criticality": "High",
+      "criticality_bucket": "High",
+      "owner": "Yogesh",
+      "next_action": "Investigate roadmap and enhancements planned",
+      "status": "In Progress",
+      "id": "fb99020075fd"
+    },
+    {
+      "topic": "Delecation functionality not suffiicient",
+      "criticality": "High",
+      "criticality_bucket": "High",
+      "owner": "Katharina / Birte",
+      "next_action": "TÜV NORD to describe what is needed",
+      "status": "In Progress",
+      "id": "827769c7ffbf"
+    },
+    {
+      "topic": "Notes in Quotes not availiable / 50 Custom Fields not sufficient to display TÜV NORD Quotes",
+      "criticality": "Medium",
+      "criticality_bucket": "Medium",
+      "owner": "Yogesh",
+      "next_action": "Investigate roadmap and enhancements planned",
+      "status": "In Progress",
+      "id": "43049159b1b8"
+    },
+    {
+      "topic": "Frame contracts can be loaded from ERP to v2 but not replicated back to ERP",
+      "criticality": "Medium",
+      "criticality_bucket": "Medium",
+      "owner": "Yogesh",
+      "next_action": "Investigate roadmap and enhancements planned",
+      "status": "In Progress",
+      "id": "73421287e6b8"
+    },
+    {
+      "topic": "Collective Quotation - splitting of offers into several smaller offerings",
+      "criticality": "Medium",
+      "criticality_bucket": "Medium",
+      "owner": "Katharina / Birte / Yogesh",
+      "next_action": "TÜV NORD to descibe the use case and provide possible screenshots; SAP to investigate roadmap and enhancements planned",
+      "status": "In Progress",
+      "id": "e38e436849bd"
+    },
+    {
+      "topic": "Error messages are not speific and not helping investigation",
+      "criticality": "Medium",
+      "criticality_bucket": "Medium",
+      "owner": "Katharina / Birte / Yogesh",
+      "next_action": "TÜV NORD to descibe the use case and provide possible screenshots; SAP to investigate roadmap and enhancements planned",
+      "status": "In Progress",
+      "id": "8eeb0ad8aa5a"
+    },
+    {
+      "topic": "Customer Hierarchy not replicable into ERP System - v2 should become the primary tool for customer interactions",
+      "criticality": "Medium",
+      "criticality_bucket": "Medium",
+      "owner": "Yogesh",
+      "next_action": "Investigate roadmap and enhancements planned",
+      "status": "In Progress",
+      "id": "316c10f9cf23"
+    },
+    {
+      "topic": "Graphical data is often displayed wrong",
+      "criticality": "Medium",
+      "criticality_bucket": "Medium",
+      "owner": "Katharina / Birte / Yogesh",
+      "next_action": "TÜV NORD to descibe the use case and provide possible screenshots; SAP to investigate roadmap and enhancements planned",
+      "status": "In Progress",
+      "id": "0fca7c7c2395"
+    }
+  ]
+}
